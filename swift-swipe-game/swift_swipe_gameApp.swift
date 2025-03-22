@@ -33,6 +33,7 @@ struct swift_swipe_gameApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(.dark)
+                .accentColor(.purple)
         }
         .modelContainer(sharedModelContainer)
     }
