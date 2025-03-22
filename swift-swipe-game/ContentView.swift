@@ -37,9 +37,28 @@ struct ContentView: View {
             if !hasSeenWelcome {
                 showWelcome = true
             }
+            
+            // Ensure database has a GameScore entry
+            checkAndInitializeGameScore()
         }
         .fullScreenCover(isPresented: $showWelcome) {
             WelcomeView(isPresented: $showWelcome)
+        }
+        .preferredColorScheme(.dark)
+    }
+    
+    private func checkAndInitializeGameScore() {
+        let fetchDescriptor = FetchDescriptor<GameScore>()
+        do {
+            let scores = try modelContext.fetch(fetchDescriptor)
+            if scores.isEmpty {
+                let newScore = GameScore()
+                modelContext.insert(newScore)
+            }
+        } catch {
+            print("Failed to fetch game scores: \(error)")
+            let newScore = GameScore()
+            modelContext.insert(newScore)
         }
     }
 }
