@@ -16,8 +16,8 @@ struct GameView: View {
     @State private var showAnimation = false
     @State private var animationScale: CGFloat = 1.0
     @State private var targetDirection: String = "Up"
-    @State private var displayedDirection: String = "Up"  
-    @State private var isFakingDirection = false  
+    @State private var displayedDirection: String = "Up"
+    @State private var isFakingDirection = false
     @State private var fakingTimer: Timer? = nil
     @State private var directionArrows: [String: String] = [
         "Up": "arrow.up",
@@ -32,27 +32,27 @@ struct GameView: View {
         "Right": .purple,
     ]
     @State private var isCorrectSwipe: Bool = false
-    @State private var difficultyLevel: Int = 1  
+    @State private var difficultyLevel: Int = 1
     @State private var showCelebration = false
     @State private var emojis: [EmojiParticle] = []
     @State private var celebrationLevel = 1
-    @State private var shouldShowFailure = false  
-    @State private var showFailure = false  
-    @State private var failureScale: CGFloat = 0.1  
+    @State private var shouldShowFailure = false
+    @State private var showFailure = false
+    @State private var failureScale: CGFloat = 0.1
     @State private var arrowRotation: Double = 0
     @State private var arrowOpacity: Double = 1.0
     @State private var sealOpacity: Double = 0.0
     @State private var showFailText = false
     @State private var failTextScale: CGFloat = 0.1
-    @State private var showFailEmojis = false  
-    @State private var failEmojis: [EmojiParticle] = []  
+    @State private var showFailEmojis = false
+    @State private var failEmojis: [EmojiParticle] = []
     @State private var showRedOverlay = false
     @State private var redOverlayOpacity: Double = 0.0
     @State private var arrowColor: Color = .blue
     @State private var showQuestionMark: Bool = false
-    @State private var actualDirection: String = "Up"  
-    @State private var revealedDirection: String = ""  
-    @State private var isWaitingForGuess: Bool = false  
+    @State private var actualDirection: String = "Up"
+    @State private var revealedDirection: String = ""
+    @State private var isWaitingForGuess: Bool = false
 
     var body: some View {
         ZStack {
@@ -80,8 +80,9 @@ struct GameView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 300, height: 300)
+                        .frame(alignment: .center)
                         .shadow(radius: darkModeEnabled ? 15 : 10)
+                        .padding()
 
                     ZStack {
                         if !revealedDirection.isEmpty {
@@ -143,7 +144,9 @@ struct GameView: View {
                             .zIndex(4)
 
                         if showFailText {
-                            Text("YOU LOSE!!")
+                            var failText = ["OH MY GYATT!!", "YOU LOSE!!", "YOU A NPC", "EHH, WHAT THE SIGMA?"]
+                            let randomText = failText.randomElement() ?? "OH MY GYATT!!"
+                            Text(randomText)
                                 .font(.system(size: 60, weight: .heavy, design: .rounded))
                                 .foregroundColor(.white)
                                 .shadow(color: .black, radius: 2, x: 1, y: 1)
@@ -198,7 +201,7 @@ struct GameView: View {
 
                 HStack(spacing: 10) {
                     VStack {
-                        Text("CURRENT")
+                        Text("CURRENT AURA")
                             .font(.caption)
                             .foregroundColor(darkModeEnabled ? .gray : .gray)
                         Text("\(gameScores.first?.currentScore ?? 0)")
@@ -211,7 +214,7 @@ struct GameView: View {
                     .cornerRadius(10)
 
                     VStack {
-                        Text("BEST")
+                        Text("MAX AURA")
                             .font(.caption)
                             .foregroundColor(darkModeEnabled ? .gray : .gray)
                         Text("\(gameScores.first?.highScore ?? 0)")
@@ -229,7 +232,7 @@ struct GameView: View {
                 .padding(.bottom, 10)
 
                 VStack(spacing: 10) {
-                    Text("Follow the arrow direction to increase your score!")
+                    Text("Follow the arrow direction to increase your aura!")
                         .font(.caption)
                         .foregroundColor(darkModeEnabled ? .gray : .gray)
                         .multilineTextAlignment(.center)
@@ -238,14 +241,15 @@ struct GameView: View {
                     Button(action: {
                         resetGame()
                     }) {
-                        Text("Reset Game")
+                        Text("BREAK MEWING STREAK")
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .padding(.horizontal, 30)
                             .padding(.vertical, 12)
                             .background(
-                                Capsule()
+                                Rectangle()
                                     .fill(Color.red.opacity(0.8))
+                                    .cornerRadius(10)  // Added corner radius
                             )
                     }
                 }
@@ -346,7 +350,7 @@ struct GameView: View {
                 self.triggerFailure()
             }
 
-            return 
+            return
         }
 
         animationScale = 1.2
@@ -380,7 +384,7 @@ struct GameView: View {
                 generateNewTargetDirection()
             } else {
                 consecutiveSwipes = 0
-                gameScore.resetCurrentScore()
+                gameScore.gameOver()
                 generateNewTargetDirection()
             }
         }
@@ -467,8 +471,8 @@ struct GameView: View {
                 self.revealedDirection = ""
 
                 if let gameScore = self.gameScores.first {
+                    gameScore.gameOver()
                     self.consecutiveSwipes = 0
-                    gameScore.resetCurrentScore()
                 }
 
                 self.generateNewTargetDirection()
@@ -498,28 +502,21 @@ struct GameView: View {
         fakingTimer?.invalidate()
         fakingTimer = nil
 
-        showFailure = false
-        redOverlayOpacity = 0
-        sealOpacity = 0
-        failureScale = 0.1
-        arrowOpacity = 1.0
-        arrowRotation = 0
-        showFailText = false
-        failTextScale = 0.1
-        showFailEmojis = false
-        showQuestionMark = false
-        revealedDirection = ""
-        isWaitingForGuess = false
+        if let gameScore = gameScores.first {
+            gameScore.gameOver()
+        }
 
         consecutiveSwipes = 0
-        lastSwipeDirection = nil
-        difficultyLevel = 1
-        isFakingDirection = false
+        swipeCount = 0
+        showQuestionMark = false
+        showFailure = false
+        showFailEmojis = false
+        failEmojis = []
+        showCelebration = false
+        emojis = []
+        showFailText = false
+        redOverlayOpacity = 0
         generateNewTargetDirection()
-
-        if let gameScore = gameScores.first {
-            gameScore.resetCurrentScore()
-        }
     }
 
     private func createFailureEmojis() {

@@ -9,6 +9,7 @@ struct WelcomeView: View {
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var detailedErrorInfo = ""
     
     var body: some View {
         ZStack {
@@ -140,12 +141,22 @@ struct WelcomeView: View {
                     }
                     .disabled(tempUsername.isEmpty || isLoading)
                     .padding(.top, 20)
+                    
+                    // Skip option for testing
+                    Button("Skip Supabase and play offline") {
+                        DispatchQueue.main.async {
+                            hasSeenWelcome = true
+                            isPresented = false
+                        }
+                    }
+                    .foregroundColor(.gray)
+                    .padding(.top, 10)
                 }
                 .padding(30)
                 .alert(isPresented: $showError) {
                     Alert(
                         title: Text("Connection Error"),
-                        message: Text(errorMessage),
+                        message: Text("\(errorMessage)\n\nDetails: \(detailedErrorInfo)"),
                         primaryButton: .default(Text("Retry")) {
                             saveUsernameToSupabase()
                         },
@@ -162,22 +173,49 @@ struct WelcomeView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            print("Environment vars check:")
+            print("SUPABASE_URL exists: \(ProcessInfo.processInfo.environment["SUPABASE_URL"] != nil)")
+            print("SUPABASE_KEY exists: \(ProcessInfo.processInfo.environment["SUPABASE_KEY"] != nil)")
+        }
     }
     
     private func saveUsernameToSupabase() {
+        print("Saving username to Supabase: \(username)")
+        
         SupabaseManager.shared.saveUsername(username: username) { result in
             DispatchQueue.main.async {
                 isLoading = false
                 
                 switch result {
                 case .success:
-                    // Success - continue to the game
+                    print("Username saved successfully")
                     hasSeenWelcome = true
                     isPresented = false
                     
                 case .failure(let error):
-                    // Show error alert with retry option
-                    errorMessage = "Could not save your username. \(error.localizedDescription)"
+                    let errorString = "\(error)"
+                    print("Failed to save username: \(errorString)")
+                    
+                    // Create a user-friendly error message
+                    switch error {
+                    case .invalidURL:
+                        errorMessage = "Invalid Supabase URL. Please try again later."
+                        detailedErrorInfo = "URL could not be created"
+                    case .networkError(let innerError):
+                        errorMessage = "Network error: \(innerError.localizedDescription)"
+                        detailedErrorInfo = "Check your internet connection"
+                    case .invalidResponse:
+                        errorMessage = "The Supabase server returned an error."
+                        detailedErrorInfo = "This could be due to missing 'User' table. Make sure you have created this table in your Supabase database."
+                    case .decodingError(let innerError):
+                        errorMessage = "Data encoding error: \(innerError.localizedDescription)"
+                        detailedErrorInfo = "Internal app error"
+                    case .configurationError:
+                        errorMessage = "Supabase configuration error. Please check your setup."
+                        detailedErrorInfo = "Check API key and URL"
+                    }
+                    
                     showError = true
                 }
             }

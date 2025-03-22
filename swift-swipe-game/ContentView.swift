@@ -20,16 +20,16 @@ struct ContentView: View {
                 VStack {
                     GameView()
                 }
-                .navigationTitle("Swift Swipe")
+                .navigationTitle("Skibidi Swipe")
             }
             .tabItem {
                 Label("Home", systemImage: "house.fill")
             }
             .tag(0)
 
-            SettingsView()
+            RankboardView()
                 .tabItem {
-                    Label("Settings", systemImage: "gear")
+                    Label("Leaderboard", systemImage: "trophy.fill")
                 }
                 .tag(1)
         }
@@ -37,7 +37,7 @@ struct ContentView: View {
             if !hasSeenWelcome {
                 showWelcome = true
             }
-            
+
             // Ensure database has a GameScore entry
             checkAndInitializeGameScore()
         }
@@ -46,7 +46,7 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
     }
-    
+
     private func checkAndInitializeGameScore() {
         let fetchDescriptor = FetchDescriptor<GameScore>()
         do {
