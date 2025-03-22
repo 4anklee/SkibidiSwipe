@@ -222,6 +222,73 @@ class SupabaseManager {
         }.resume()
     }
 
+    // Check if username exists
+    func checkUsernameExists(username: String, completion: @escaping (Bool, Error?) -> Void) {
+        guard
+            let encodedUsername = username.addingPercentEncoding(
+                withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(
+                string:
+                    "\(SupabaseConfig.supabaseURL)/rest/v1/User?username=eq.\(encodedUsername)&select=username"
+            )
+        else {
+            completion(false, SupabaseError.invalidURL)
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue(SupabaseConfig.supabaseKey, forHTTPHeaderField: "apikey")
+        request.addValue(
+            "Bearer \(SupabaseConfig.supabaseKey)", forHTTPHeaderField: "Authorization")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Network error: \(error.localizedDescription)")
+                completion(false, error)
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("Invalid response type")
+                completion(false, SupabaseError.invalidResponse)
+                return
+            }
+
+            print("HTTP Response status code: \(httpResponse.statusCode)")
+
+            if !(200...299).contains(httpResponse.statusCode) {
+                let responseString =
+                    data != nil
+                    ? String(data: data!, encoding: .utf8) ?? "No response body"
+                    : "No response body"
+                print("Error response: \(responseString)")
+                completion(false, SupabaseError.invalidResponse)
+                return
+            }
+
+            guard let data = data else {
+                completion(false, nil)
+                return
+            }
+
+            do {
+                guard let users = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+                else {
+                    completion(false, nil)
+                    return
+                }
+
+                // Username exists if the array is not empty
+                completion(!users.isEmpty, nil)
+            } catch {
+                print("Decoding error: \(error.localizedDescription)")
+                completion(false, error)
+            }
+        }.resume()
+    }
+
     // Get all users
     func getAllUsers(completion: @escaping (Result<[[String: Any]], SupabaseError>) -> Void) {
         guard let url = URL(string: "\(SupabaseConfig.supabaseURL)/rest/v1/User?select=*") else {

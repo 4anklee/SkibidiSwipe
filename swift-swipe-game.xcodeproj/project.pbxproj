@@ -34,7 +34,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		3671197D2D8E85CD00B87F26 /* Exceptions for "swift-swipe-game" folder in "swift-swipe-game" target */ = {
+		368B2B6E2D8ECE1A0029D2F9 /* Exceptions for "swift-swipe-game" folder in "swift-swipe-game" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -47,7 +47,7 @@
 		367119592D8E85CC00B87F26 /* swift-swipe-game */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				3671197D2D8E85CD00B87F26 /* Exceptions for "swift-swipe-game" folder in "swift-swipe-game" target */,
+				368B2B6E2D8ECE1A0029D2F9 /* Exceptions for "swift-swipe-game" folder in "swift-swipe-game" target */,
 			);
 			path = "swift-swipe-game";
 			sourceTree = "<group>";
