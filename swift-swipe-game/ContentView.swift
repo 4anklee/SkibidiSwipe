@@ -5,18 +5,17 @@
 //  Created by Frank Lee on 3/21/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab = 0
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome: Bool = false
     @State private var showWelcome = false
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
-            // Home Tab
             NavigationView {
                 VStack {
                     GameView()
@@ -27,8 +26,7 @@ struct ContentView: View {
                 Label("Home", systemImage: "house.fill")
             }
             .tag(0)
-            
-            // Settings Tab
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")
