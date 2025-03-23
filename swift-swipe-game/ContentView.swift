@@ -16,7 +16,7 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            NavigationView {
+            NavigationStack {
                 VStack {
                     GameView()
                 }
