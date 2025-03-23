@@ -1,6 +1,15 @@
 import Combine
 import SwiftUI
 
+struct PixelParticle: Identifiable {
+    let id = UUID()
+    var position: CGPoint
+    var size: CGFloat
+    var color: Color
+    var speed: Double
+    var angle: Double
+}
+
 struct WelcomeView: View {
     @AppStorage("hasSeenWelcome") private var hasSeenWelcome: Bool = false
     @AppStorage("username") private var username: String = "Player"
@@ -15,24 +24,56 @@ struct WelcomeView: View {
     @State private var snackbarMessage = ""
     @State private var gradientStart = UnitPoint(x: 0, y: 0)
     @State private var gradientEnd = UnitPoint(x: 1, y: 1)
+    @State private var pixels: [PixelParticle] = []
+    @State private var timer: Timer?
+
+    let pixelCount = 150
 
     var body: some View {
         ZStack {
-            // Animated gradient background with ultra thin material
+            // Animated gradient background
             LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]),
+                gradient: Gradient(colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)]),
                 startPoint: gradientStart,
                 endPoint: gradientEnd
             )
             .edgesIgnoringSafeArea(.all)
-            .background(Material.ultraThinMaterial)
             .onAppear {
-                withAnimation(Animation.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
+                withAnimation(Animation.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
                     self.gradientStart = UnitPoint(x: 1, y: 0)
                     self.gradientEnd = UnitPoint(x: 0, y: 1)
                 }
             }
 
+            // Pixel animation layer
+            GeometryReader { geometry in
+                ZStack {
+                    // Render all the pixels
+                    ForEach(pixels) { pixel in
+                        Circle()
+                            .fill(pixel.color)
+                            .frame(width: pixel.size, height: pixel.size)
+                            .position(pixel.position)
+                            .blendMode(.screen)
+                    }
+                }
+                .onAppear {
+                    // Initialize pixels
+                    generatePixels(in: geometry.size)
+
+                    // Setup animation timer
+                    timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+                        updatePixels(in: geometry.size)
+                    }
+                }
+                .onDisappear {
+                    timer?.invalidate()
+                    timer = nil
+                }
+            }
+            .background(Material.ultraThinMaterial)
+
+            // Rest of your view content
             if currentPage == 0 {
                 // Welcome page
                 VStack(spacing: 30) {
@@ -117,9 +158,9 @@ struct WelcomeView: View {
                         .cornerRadius(8)
                         .foregroundColor(.white)
                         .padding(.horizontal, 30)
-                        .autocapitalization(.none)
+                        .textInputAutocapitalization(.none)
                         .disableAutocorrection(true)
-                        .padding(.top, 10)
+                        .padding([.top], 10)
 
                     Button(action: {
                         if tempUsername.isEmpty {
@@ -152,7 +193,6 @@ struct WelcomeView: View {
                         }
                     }
                     .disabled(isLoading)
-                    //                    .padding(.top, 10/)
 
                     // Skip option for testing
                     Button("Skip and play offline") {
@@ -187,12 +227,12 @@ struct WelcomeView: View {
                     VStack {
                         Spacer()
                         Text(snackbarMessage)
-                            .font(.system(size: 20, weight: .light))
+                            .font(.system(size: 20))
                             .padding(.vertical, 20)
                             .padding(.horizontal, 30)
                             .background(
                                 Rectangle()
-                                    .fill(Material.ultraThinMaterial)
+                                    .fill(Material.ultraThinMaterial.opacity(0.5))
                                     .cornerRadius(10)
                             )
                             .foregroundColor(.primary)
@@ -213,14 +253,67 @@ struct WelcomeView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .onAppear {
-            debugPrint("Environment vars check:")
-            debugPrint(
-                "SUPABASE_URL exists: \(ProcessInfo.processInfo.environment["SUPABASE_URL"] != nil)"
+    }
+
+    // Generate initial pixels
+    private func generatePixels(in size: CGSize) {
+        pixels = []
+        for _ in 0..<pixelCount {
+            let position = CGPoint(
+                x: CGFloat.random(in: 0...size.width),
+                y: CGFloat.random(in: 0...size.height)
             )
-            debugPrint(
-                "SUPABASE_KEY exists: \(ProcessInfo.processInfo.environment["SUPABASE_KEY"] != nil)"
+            let pixelSize = CGFloat.random(in: 2...5)
+            let pixelColor = [Color.blue, Color.purple, Color.cyan].randomElement()!.opacity(
+                CGFloat.random(in: 0.3...0.7))
+            let speed = Double.random(in: 0.5...2.0)
+            let angle = Double.random(in: 0..<(2 * .pi))
+
+            pixels.append(
+                PixelParticle(
+                    position: position,
+                    size: pixelSize,
+                    color: pixelColor,
+                    speed: speed,
+                    angle: angle
+                ))
+        }
+    }
+
+    // Update pixel positions
+    private func updatePixels(in size: CGSize) {
+        for i in 0..<pixels.count {
+            var pixel = pixels[i]
+
+            // Calculate new position based on angle and speed
+            let dx = CGFloat(cos(pixel.angle) * pixel.speed)
+            let dy = CGFloat(sin(pixel.angle) * pixel.speed)
+
+            var newPosition = CGPoint(
+                x: pixel.position.x + dx,
+                y: pixel.position.y + dy
             )
+
+            // Boundary check - wrap around if out of bounds
+            if newPosition.x < 0 {
+                newPosition.x = size.width
+            } else if newPosition.x > size.width {
+                newPosition.x = 0
+            }
+
+            if newPosition.y < 0 {
+                newPosition.y = size.height
+            } else if newPosition.y > size.height {
+                newPosition.y = 0
+            }
+
+            // Small random changes to angle occasionally
+            if Int.random(in: 0...100) < 5 {
+                pixel.angle += Double.random(in: -0.2...0.2)
+            }
+
+            pixel.position = newPosition
+            pixels[i] = pixel
         }
     }
 
