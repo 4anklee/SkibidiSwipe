@@ -13,15 +13,30 @@ struct WelcomeView: View {
     @State private var detailedErrorInfo = ""
     @State private var showSnackbar = false
     @State private var snackbarMessage = ""
+    @State private var gradientStart = UnitPoint(x: 0, y: 0)
+    @State private var gradientEnd = UnitPoint(x: 1, y: 1)
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.9).edgesIgnoringSafeArea(.all)
+            // Animated gradient background with ultra thin material
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]),
+                startPoint: gradientStart,
+                endPoint: gradientEnd
+            )
+            .edgesIgnoringSafeArea(.all)
+            .background(Material.ultraThinMaterial)
+            .onAppear {
+                withAnimation(Animation.easeInOut(duration: 1).repeatForever(autoreverses: true)) {
+                    self.gradientStart = UnitPoint(x: 1, y: 0)
+                    self.gradientEnd = UnitPoint(x: 0, y: 1)
+                }
+            }
 
             if currentPage == 0 {
                 // Welcome page
                 VStack(spacing: 30) {
-                    Text("Welcome to Swift Swipe!")
+                    Text("Welcome to Skibidi Swipe!")
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -40,19 +55,19 @@ struct WelcomeView: View {
                         HowToPlayItem(
                             icon: "hand.tap.fill",
                             title: "Swipe",
-                            description: "Swipe in any direction to start playing"
+                            description: "Swipe in any direction to start aura farming"
                         )
 
                         HowToPlayItem(
                             icon: "arrow.left.arrow.right",
                             title: "Be Consistent",
-                            description: "Keep swiping in the same direction to increase your score"
+                            description: "Keep swiping in the same direction to increase your aura"
                         )
 
                         HowToPlayItem(
                             icon: "trophy.fill",
                             title: "Break Records",
-                            description: "Try to beat your high score!"
+                            description: "Try to beat the RIZZ GOD!"
                         )
                     }
                     .padding(.top)
@@ -68,16 +83,12 @@ struct WelcomeView: View {
                             .padding()
                             .frame(width: 200)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
+                                RoundedRectangle(cornerRadius: 10)
                                     .fill(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [Color.blue, Color.purple]),
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
+                                        Material.ultraThin
                                     )
                             )
-                            .shadow(radius: 5)
+                            .shadow(radius: 10)
                     }
                     .padding(.top, 20)
                 }
@@ -108,6 +119,7 @@ struct WelcomeView: View {
                         .padding(.horizontal, 30)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+                        .padding(.top, 10)
 
                     Button(action: {
                         if tempUsername.isEmpty {
@@ -120,23 +132,16 @@ struct WelcomeView: View {
                     }) {
                         ZStack {
                             Text("Let's Play!")
+                                .padding()
                                 .font(.headline)
                                 .foregroundColor(.white)
-                                .padding()
-                                .frame(width: 200)
+                                .padding(.horizontal, 30)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    RoundedRectangle(cornerRadius: 10)
                                         .fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.blue, Color.purple,
-                                                ]),
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
+                                            Material.thin
                                         )
                                 )
-                                .shadow(radius: 5)
                                 .opacity(isLoading ? 0 : 1)
 
                             if isLoading {
@@ -147,17 +152,16 @@ struct WelcomeView: View {
                         }
                     }
                     .disabled(isLoading)
-                    .padding(.top, 20)
+                    //                    .padding(.top, 10/)
 
                     // Skip option for testing
-                    Button("Skip Supabase and play offline") {
+                    Button("Skip and play offline") {
                         DispatchQueue.main.async {
                             hasSeenWelcome = true
                             isPresented = false
                         }
                     }
                     .foregroundColor(.gray)
-                    .padding(.top, 10)
                 }
                 .padding(30)
                 .alert(isPresented: $showError) {
@@ -183,22 +187,21 @@ struct WelcomeView: View {
                     VStack {
                         Spacer()
                         Text(snackbarMessage)
-                            .padding()
-                            .background(Color.black.opacity(0.7))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
-                            .padding(.bottom, 20)
+                            .font(.system(size: 20, weight: .light))
+                            .padding(.vertical, 20)
+                            .padding(.horizontal, 30)
+                            .background(
+                                Rectangle()
+                                    .fill(Material.ultraThinMaterial)
+                                    .cornerRadius(10)
+                            )
+                            .foregroundColor(.primary)
+                            .padding(.bottom, 16)
                             .onAppear {
                                 // Hide after 3 seconds
-                                DispatchQueue.main.async {
-                                    // Sleep this thread for 3 seconds
-                                    Thread.sleep(forTimeInterval: 0.01)
-
-                                    // After 3 seconds on main thread, hide the snackbar
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                        withAnimation {
-                                            self.showSnackbar = false
-                                        }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    withAnimation {
+                                        self.showSnackbar = false
                                     }
                                 }
                             }
@@ -330,4 +333,8 @@ struct HowToPlayItem: View {
                 .fill(Color.white.opacity(0.1))
         )
     }
+}
+
+#Preview {
+    WelcomeView(isPresented: .constant(true))
 }
