@@ -51,9 +51,9 @@ final class GameScore {
             result in
             switch result {
             case .success:
-                print("High score synced successfully")
+                debugPrint("High score synced successfully")
             case .failure(let error):
-                print("Failed to sync high score: \(error)")
+                debugPrint("Failed to sync high score: \(error)")
             }
         }
     }

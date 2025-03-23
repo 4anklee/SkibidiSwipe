@@ -56,7 +56,7 @@ struct ContentView: View {
                 modelContext.insert(newScore)
             }
         } catch {
-            print("Failed to fetch game scores: \(error)")
+            debugPrint("Failed to fetch game scores: \(error)")
             let newScore = GameScore()
             modelContext.insert(newScore)
         }

@@ -10,14 +10,20 @@ enum SupabaseError: Error {
 
 struct SupabaseConfig {
     static var supabaseURL: String {
-        guard let value = ProcessInfo.processInfo.environment["SUPABASE_URL"] else {
+        guard
+            let info = Bundle.main.infoDictionary,
+            let value = info["SupabaseURL"] as? String
+        else {
             fatalError("SUPABASE_URL not found in environment variables")
         }
-        return value
+        return "https://\(value)"
     }
 
     static var supabaseKey: String {
-        guard let value = ProcessInfo.processInfo.environment["SUPABASE_KEY"] else {
+        guard
+            let info = Bundle.main.infoDictionary,
+            let value = info["SupabaseKey"] as? String
+        else {
             fatalError("SUPABASE_KEY not found in environment variables")
         }
         return value
@@ -28,9 +34,11 @@ class SupabaseManager {
     static let shared = SupabaseManager()
 
     private init() {
-        // Print the URL and key being used for debugging
-        print("Supabase URL: \(SupabaseConfig.supabaseURL)")
-        print("Supabase Key length: \(SupabaseConfig.supabaseKey.count) characters")
+        // debugPrint the URL and key being used for debugging
+        debugPrint("Supabase URL: \(SupabaseConfig.supabaseURL)")
+        debugPrint(
+            "Supabase Key length: \(SupabaseConfig.supabaseKey.count) characters"
+        )
     }
 
     // Save username
@@ -64,25 +72,25 @@ class SupabaseManager {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Network error: \(error.localizedDescription)")
+                debugPrint("Network error: \(error.localizedDescription)")
                 completion(.failure(.networkError(error)))
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Invalid response type")
+                debugPrint("Invalid response type")
                 completion(.failure(.invalidResponse))
                 return
             }
 
-            print("HTTP Response status code: \(httpResponse.statusCode)")
+            debugPrint("HTTP Response status code: \(httpResponse.statusCode)")
 
             if !(200...299).contains(httpResponse.statusCode) {
                 let responseString =
                     data != nil
                     ? String(data: data!, encoding: .utf8) ?? "No response body"
                     : "No response body"
-                print("Error response: \(responseString)")
+                debugPrint("Error response: \(responseString)")
                 completion(.failure(.invalidResponse))
                 return
             }
@@ -127,25 +135,25 @@ class SupabaseManager {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Network error: \(error.localizedDescription)")
+                debugPrint("Network error: \(error.localizedDescription)")
                 completion(.failure(.networkError(error)))
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Invalid response type")
+                debugPrint("Invalid response type")
                 completion(.failure(.invalidResponse))
                 return
             }
 
-            print("HTTP Response status code: \(httpResponse.statusCode)")
+            debugPrint("HTTP Response status code: \(httpResponse.statusCode)")
 
             if !(200...299).contains(httpResponse.statusCode) {
                 let responseString =
                     data != nil
                     ? String(data: data!, encoding: .utf8) ?? "No response body"
                     : "No response body"
-                print("Error response: \(responseString)")
+                debugPrint("Error response: \(responseString)")
                 completion(.failure(.invalidResponse))
                 return
             }
@@ -179,25 +187,25 @@ class SupabaseManager {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Network error: \(error.localizedDescription)")
+                debugPrint("Network error: \(error.localizedDescription)")
                 completion(.failure(.networkError(error)))
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Invalid response type")
+                debugPrint("Invalid response type")
                 completion(.failure(.invalidResponse))
                 return
             }
 
-            print("HTTP Response status code: \(httpResponse.statusCode)")
+            debugPrint("HTTP Response status code: \(httpResponse.statusCode)")
 
             if !(200...299).contains(httpResponse.statusCode) {
                 let responseString =
                     data != nil
                     ? String(data: data!, encoding: .utf8) ?? "No response body"
                     : "No response body"
-                print("Error response: \(responseString)")
+                debugPrint("Error response: \(responseString)")
                 completion(.failure(.invalidResponse))
                 return
             }
@@ -216,7 +224,7 @@ class SupabaseManager {
                 }
                 completion(.success(user))
             } catch {
-                print("Decoding error: \(error.localizedDescription)")
+                debugPrint("Decoding error: \(error.localizedDescription)")
                 completion(.failure(.decodingError(error)))
             }
         }.resume()
@@ -245,25 +253,25 @@ class SupabaseManager {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Network error: \(error.localizedDescription)")
+                debugPrint("Network error: \(error.localizedDescription)")
                 completion(false, error)
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Invalid response type")
+                debugPrint("Invalid response type")
                 completion(false, SupabaseError.invalidResponse)
                 return
             }
 
-            print("HTTP Response status code: \(httpResponse.statusCode)")
+            debugPrint("HTTP Response status code: \(httpResponse.statusCode)")
 
             if !(200...299).contains(httpResponse.statusCode) {
                 let responseString =
                     data != nil
                     ? String(data: data!, encoding: .utf8) ?? "No response body"
                     : "No response body"
-                print("Error response: \(responseString)")
+                debugPrint("Error response: \(responseString)")
                 completion(false, SupabaseError.invalidResponse)
                 return
             }
@@ -283,7 +291,7 @@ class SupabaseManager {
                 // Username exists if the array is not empty
                 completion(!users.isEmpty, nil)
             } catch {
-                print("Decoding error: \(error.localizedDescription)")
+                debugPrint("Decoding error: \(error.localizedDescription)")
                 completion(false, error)
             }
         }.resume()
@@ -305,25 +313,25 @@ class SupabaseManager {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Network error: \(error.localizedDescription)")
+                debugPrint("Network error: \(error.localizedDescription)")
                 completion(.failure(.networkError(error)))
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("Invalid response type")
+                debugPrint("Invalid response type")
                 completion(.failure(.invalidResponse))
                 return
             }
 
-            print("HTTP Response status code: \(httpResponse.statusCode)")
+            debugPrint("HTTP Response status code: \(httpResponse.statusCode)")
 
             if !(200...299).contains(httpResponse.statusCode) {
                 let responseString =
                     data != nil
                     ? String(data: data!, encoding: .utf8) ?? "No response body"
                     : "No response body"
-                print("Error response: \(responseString)")
+                debugPrint("Error response: \(responseString)")
                 completion(.failure(.invalidResponse))
                 return
             }
@@ -341,7 +349,7 @@ class SupabaseManager {
                 }
                 completion(.success(users))
             } catch {
-                print("Decoding error: \(error.localizedDescription)")
+                debugPrint("Decoding error: \(error.localizedDescription)")
                 completion(.failure(.decodingError(error)))
             }
         }.resume()

@@ -211,11 +211,11 @@ struct WelcomeView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
-            print("Environment vars check:")
-            print(
+            debugPrint("Environment vars check:")
+            debugPrint(
                 "SUPABASE_URL exists: \(ProcessInfo.processInfo.environment["SUPABASE_URL"] != nil)"
             )
-            print(
+            debugPrint(
                 "SUPABASE_KEY exists: \(ProcessInfo.processInfo.environment["SUPABASE_KEY"] != nil)"
             )
         }
@@ -230,7 +230,7 @@ struct WelcomeView: View {
     }
 
     private func checkUsernameAndSave() {
-        print("Checking if username is available: \(tempUsername)")
+        debugPrint("Checking if username is available: \(tempUsername)")
 
         // Check if username exists in Supabase
         SupabaseManager.shared.checkUsernameExists(username: tempUsername) { exists, error in
@@ -258,7 +258,7 @@ struct WelcomeView: View {
     }
 
     private func saveUsernameToSupabase() {
-        print("Saving username to Supabase: \(username)")
+        debugPrint("Saving username to Supabase: \(username)")
 
         SupabaseManager.shared.saveUsername(username: username) { result in
             DispatchQueue.main.async {
@@ -266,13 +266,13 @@ struct WelcomeView: View {
 
                 switch result {
                 case .success:
-                    print("Username saved successfully")
+                    debugPrint("Username saved successfully")
                     hasSeenWelcome = true
                     isPresented = false
 
                 case .failure(let error):
                     let errorString = "\(error)"
-                    print("Failed to save username: \(errorString)")
+                    debugPrint("Failed to save username: \(errorString)")
 
                     // Create a user-friendly error message
                     switch error {
