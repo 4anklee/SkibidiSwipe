@@ -1,3 +1,5 @@
+<img src="screenshots/app_icon.png" width="100" alt="App Icon">
+
 # Skibidi Swipe - Swift Gesture Game
 
 A fast-paced mobile game built with SwiftUI where players respond to directional prompts by swiping in the correct direction.
@@ -12,6 +14,14 @@ A fast-paced mobile game built with SwiftUI where players respond to directional
 -   **Responsive Design**: Optimized for various iOS devices
 
 ## Screenshots
+
+<div align="center">
+  <img src="screenshots/landing.png" alt="Landing Screen" width="200" />
+  <img src="screenshots/username.png" alt="Username Screen" width="200" />
+  <img src="screenshots/main.png" alt="Main Gameplay" width="200" />
+  <img src="screenshots/lose.png" alt="Game Over Screen" width="200" />
+  <img src="screenshots/leaderboard.png" alt="Leaderboard Screen" width="200" />
+</div>
 
 ## Requirements
 
