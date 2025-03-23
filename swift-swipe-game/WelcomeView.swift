@@ -137,14 +137,13 @@ struct WelcomeView: View {
             } else {
                 // Username entry page
                 VStack(spacing: 30) {
-                    Text("What should we call you?")
+                    Text("What is the name of the alpha?")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
-                    Image(systemName: "person.fill")
+                    Text("🐺")
                         .font(.system(size: 60))
-                        .foregroundColor(.blue)
                         .padding()
                         .background(
                             Circle()
@@ -164,7 +163,7 @@ struct WelcomeView: View {
 
                     Button(action: {
                         if tempUsername.isEmpty {
-                            showSnackbarMessage("Please enter a username")
+                            showSnackbarMessage("But alpha, I need to know your name!")
                         } else {
                             isLoading = true
                             username = tempUsername
@@ -343,7 +342,7 @@ struct WelcomeView: View {
             if exists {
                 DispatchQueue.main.async {
                     isLoading = false
-                    showSnackbarMessage("Username has been taken")
+                    showSnackbarMessage("What a Ohio name...")
                 }
                 return
             }

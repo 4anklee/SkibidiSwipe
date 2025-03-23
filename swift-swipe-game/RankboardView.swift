@@ -1,6 +1,12 @@
 import SwiftData
 import SwiftUI
 
+#if canImport(UIKit)
+    import UIKit
+#else
+    import AppKit
+#endif
+
 struct RankboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var gameScores: [GameScore]
@@ -24,7 +30,6 @@ struct RankboardView: View {
 
                 ScrollView {
                     VStack(spacing: 15) {
-                        // Your stats card
                         VStack(spacing: 5) {
                             Text("YOUR STATS")
                                 .font(.caption)
@@ -40,7 +45,6 @@ struct RankboardView: View {
                         .padding(.top, 5)
                         .padding(.bottom, 10)
 
-                        // Global rankings
                         VStack(spacing: 5) {
                             Text("GLOBAL RANKINGS")
                                 .font(.caption)
@@ -49,24 +53,47 @@ struct RankboardView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal)
 
-                            if isLoading {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                    .padding()
-                                    .frame(height: 200)
-                            } else if users.isEmpty {
-                                EmptyRankingsView()
-                            } else {
-                                RankingsList(
-                                    users: users, username: username, rankColors: rankColors,
-                                    rankIcons: rankIcons)
+                            ZStack {
+                                // Rankings content
+                                if users.isEmpty {
+                                    EmptyRankingsView()
+                                        .opacity(isLoading ? 0.3 : 1.0)
+                                        .animation(.easeInOut(duration: 0.5), value: isLoading)
+                                } else {
+                                    RankingsList(
+                                        users: users, username: username, rankColors: rankColors,
+                                        rankIcons: rankIcons
+                                    )
+                                    .opacity(isLoading ? 0.3 : 1.0)
+                                    .animation(.easeInOut(duration: 0.5), value: isLoading)
+                                }
+
+                                // Loading overlay
+                                if isLoading {
+                                    ProgressView()
+                                        .scaleEffect(1.5)
+                                        .padding()
+                                        .frame(maxWidth: .infinity, minHeight: 200)
+                                        .transition(.opacity)
+                                        .animation(.easeInOut(duration: 0.3), value: isLoading)
+                                }
                             }
 
                             Button(action: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    isLoading = true
+                                }
                                 fetchAllUsers()
                             }) {
                                 HStack {
                                     Image(systemName: "arrow.clockwise")
+                                        .rotationEffect(.degrees(isLoading ? 360 : 0))
+                                        .animation(
+                                            isLoading
+                                                ? .linear(duration: 1.0).repeatForever(
+                                                    autoreverses: false) : .default,
+                                            value: isLoading
+                                        )
                                     Text("Refresh Rankings")
                                 }
                                 .font(.system(size: 16, weight: .semibold))
@@ -76,18 +103,14 @@ struct RankboardView: View {
                                 .background(
                                     Rectangle()
                                         .fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.blue, Color.purple.opacity(0.8),
-                                                ]),
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
+                                            Material.ultraThin
                                         )
                                         .cornerRadius(10)
                                 )
-                                .shadow(color: .blue.opacity(0.3), radius: 5, x: 0, y: 3)
                             }
+                            .opacity(isLoading ? 0.6 : 1.0)
+                            .scaleEffect(isLoading ? 0.95 : 1.0)
+                            .disabled(isLoading)
                             .padding(.top, 20)
                             .padding(.bottom, 30)
                         }
@@ -116,13 +139,14 @@ struct RankboardView: View {
 
     private func fetchAllUsers() {
         isLoading = true
+        let loadingDelay = DispatchTime.now() + 1.5
+
         SupabaseManager.shared.getAllUsers { result in
-            DispatchQueue.main.async {
+            DispatchQueue.main.asyncAfter(deadline: loadingDelay) {
                 isLoading = false
 
                 switch result {
                 case .success(let fetchedUsers):
-                    // Sort users by highest score in descending order
                     self.users = fetchedUsers.sorted {
                         let score1 = $0["highest_score"] as? Int ?? 0
                         let score2 = $1["highest_score"] as? Int ?? 0
@@ -165,7 +189,6 @@ struct StatsCard: View {
 
                     Spacer()
 
-                    // Show user's rank if found
                     if let userIndex = users.firstIndex(where: {
                         $0["username"] as? String == username
                     }) {
@@ -195,9 +218,86 @@ struct StatsCard: View {
 
                     Spacer()
 
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 28))
-                        .foregroundColor(.cyan.opacity(0.7))
+                    // Custom share button
+                    Button(action: {
+                        // Create a comprehensive share message
+                        let shareText =
+                            "I just got \(highScore) points in Skibidi Swipe! Can you beat me? 🎮 #SkibidiSwipe"
+
+                        // Initialize shareItems array
+                        var shareItems: [Any] = []
+
+                        // Add text first for better display on most platforms
+                        shareItems.append(shareText)
+
+                        // Get app share URL from Info.plist (set in Secrets.xcconfig)
+                        // Add https:// prefix since we can't include it in xcconfig (would be treated as comment)
+                        if let appURLString = Bundle.main.object(
+                            forInfoDictionaryKey: "AppShareURL") as? String
+                        {
+                            let fullURLString = "https://" + appURLString
+                            let appURL = URL(string: fullURLString)
+
+                            // Add URL to share items
+                            if let appURL = appURL {
+                                shareItems.append(appURL)
+                            }
+                        }
+
+                        // Add app icon as a preview image
+                        #if canImport(UIKit)
+                            if let appIcon = UIImage(named: "AppIcon")
+                                ?? UIImage(systemName: "gamecontroller.fill")
+                            {
+                                shareItems.append(appIcon)
+                            }
+                        #endif
+
+                        // Create and configure activity view controller
+                        #if canImport(UIKit)
+                            let activityVC = UIActivityViewController(
+                                activityItems: shareItems,
+                                applicationActivities: nil
+                            )
+
+                            // Optional: Customize title and subject for email/messages
+                            activityVC.setValue(
+                                "Skibidi Swipe - High Score Challenge", forKey: "subject")
+
+                            // Set up share sheet for iPad
+                            if let windowScene = UIApplication.shared.connectedScenes.first
+                                as? UIWindowScene,
+                                let rootViewController = windowScene.windows.first?
+                                    .rootViewController
+                            {
+                                // For iPad: Set the source point to avoid crashes
+                                if let popover = activityVC.popoverPresentationController {
+                                    popover.sourceView = rootViewController.view
+                                    popover.sourceRect = CGRect(
+                                        x: UIScreen.main.bounds.width / 2,
+                                        y: UIScreen.main.bounds.height / 2,
+                                        width: 0,
+                                        height: 0)
+                                    popover.permittedArrowDirections = []
+                                }
+
+                                rootViewController.present(activityVC, animated: true)
+                            }
+                        #endif
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 20))
+                            Text("Share")
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.cyan.opacity(0.2))
+                        .cornerRadius(8)
+                        .foregroundColor(.cyan)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -234,7 +334,6 @@ struct RankingsList: View {
                 let isCurrentUser = user["username"] as? String == username
 
                 HStack {
-                    // Rank number with medal for top 3
                     if index < 3 {
                         ZStack {
                             Circle()
@@ -275,7 +374,6 @@ struct RankingsList: View {
 
                     Spacer()
 
-                    // Score with accent color based on position
                     VStack(alignment: .trailing) {
                         Text("\(user["highest_score"] as? Int ?? 0)")
                             .font(.system(size: 20, weight: .bold))

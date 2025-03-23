@@ -144,7 +144,9 @@ struct GameView: View {
                             .zIndex(4)
 
                         if showFailText {
-                            let failText = ["OH MY GYATT!!", "YOU LOSE!!", "YOU A NPC", "EHH, WHAT THE SIGMA?"]
+                            let failText = [
+                                "OH MY GYATT!!", "YOU LOSE!!", "YOU A NPC", "EHH, WHAT THE SIGMA?",
+                            ]
                             let randomText = failText.randomElement() ?? "OH MY GYATT!!"
                             Text(randomText)
                                 .font(.system(size: 60, weight: .heavy, design: .rounded))
@@ -591,7 +593,7 @@ struct GameView: View {
     private func createEmojiParticles() {
         emojis.removeAll()
 
-        let celebrationEmojis = ["🏆", "⭐️", "🥇", "👑", "💪", "👏", "🙌", "🎯", "✅", "🔥"]
+        let celebrationEmojis = ["🐺", "🍑", "😻"]
 
         let baseCount = min(3 + (celebrationLevel * 2), 15)
 
